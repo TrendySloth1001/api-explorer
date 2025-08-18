@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Details - Developer API Explorer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/api-details.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕹️</text></svg>">
+    <script src="/static/api-details.js" defer></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    🕹️ API EXPLORER
+                </div>
+                <nav class="nav">
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="/#apis" class="nav-link">APIs</a>
+                    <a href="#about" class="nav-link">About</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- API Header -->
+            <section class="api-header" id="apiHeader">
+                <!-- API details will be loaded here -->
+            </section>
+
+            <!-- Tabbed Interface -->
+            <section class="tabs-section">
+                <div class="tabs-nav">
+                    <button class="tab-btn active" data-tab="docs">📖 Documentation</button>
+                    <button class="tab-btn" data-tab="sandbox">🧪 Live Sandbox</button>
+                    <button class="tab-btn" data-tab="codegen">🤖 AI Code Examples</button>
+                </div>
+
+                <!-- Documentation Tab -->
+                <div class="tab-content active" id="docs">
+                    <div class="docs-content">
+                        <h3>API Documentation</h3>
+                        <div id="apiDocs">
+                            <!-- Documentation content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sandbox Tab -->
+                <div class="tab-content" id="sandbox">
+                    <div class="sandbox-content">
+                        <h3>Live API Testing Sandbox</h3>
+                        
+                        <div class="sandbox-form">
+                            <div class="form-group">
+                                <label>HTTP Method:</label>
+                                <select id="httpMethod" class="form-control">
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                    <option value="PUT">PUT</option>
+                                    <option value="DELETE">DELETE</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Endpoint URL:</label>
+                                <input type="text" id="endpointUrl" class="form-control" placeholder="Enter full API endpoint URL">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Query Parameters (JSON):</label>
+                                <textarea id="queryParams" class="form-control" rows="3" placeholder='{"key": "value"}'></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Headers (JSON):</label>
+                                <textarea id="headers" class="form-control" rows="3" placeholder='{"Authorization": "Bearer token"}'></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Request Body (JSON):</label>
+                                <textarea id="requestBody" class="form-control" rows="4" placeholder='{"data": "value"}'></textarea>
+                            </div>
+
+                            <button class="btn btn-primary" id="testApiBtn">🚀 Test API</button>
+                        </div>
+
+                        <div class="terminal" id="apiResponse" style="display: none;">
+                            <div class="terminal-header">
+                                <div class="terminal-dots">
+                                    <div class="terminal-dot red"></div>
+                                    <div class="terminal-dot yellow"></div>
+                                    <div class="terminal-dot green"></div>
+                                </div>
+                                <span>API Response</span>
+                            </div>
+                            <pre id="responseContent"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Generation Tab -->
+                <div class="tab-content" id="codegen">
+                    <div class="codegen-content">
+                        <h3>AI-Generated Code Examples</h3>
+                        <p>Generate Python and JavaScript code examples for this API using AI.</p>
+                        
+                        <button class="btn btn-secondary" id="generateCodeBtn">🤖 Generate Code Examples</button>
+                        
+                        <div class="code-examples" id="codeExamples" style="display: none;">
+                            <div class="code-section">
+                                <h4>Python Example</h4>
+                                <div class="terminal">
+                                    <div class="terminal-header">
+                                        <div class="terminal-dots">
+                                            <div class="terminal-dot red"></div>
+                                            <div class="terminal-dot yellow"></div>
+                                            <div class="terminal-dot green"></div>
+                                        </div>
+                                        <span>python_example.py</span>
+                                    </div>
+                                    <pre id="pythonCode"></pre>
+                                </div>
+                            </div>
+
+                            <div class="code-section">
+                                <h4>JavaScript Example</h4>
+                                <div class="terminal">
+                                    <div class="terminal-header">
+                                        <div class="terminal-dots">
+                                            <div class="terminal-dot red"></div>
+                                            <div class="terminal-dot yellow"></div>
+                                            <div class="terminal-dot green"></div>
+                                        </div>
+                                        <span>javascript_example.js</span>
+                                    </div>
+                                    <pre id="javascriptCode"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="/static/api-details.js"></script>
+</body>
+</html>

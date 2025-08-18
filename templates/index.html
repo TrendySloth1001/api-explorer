@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer API Explorer - Retro Style</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕹️</text></svg>">
+    <script src="/static/app.js" defer></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    🕹️ API EXPLORER
+                </div>
+                <nav class="nav">
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="#apis" class="nav-link">APIs</a>
+                    <a href="#about" class="nav-link">About</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Hero Section -->
+            <section class="hero">
+                <h1>DEVELOPER API EXPLORER</h1>
+                <p>Discover, test, and integrate public APIs with retro style. Generate code examples with AI assistance.</p>
+                <a href="#search" class="btn btn-primary">Start Exploring</a>
+            </section>
+
+            <!-- Search Section -->
+            <section class="search-section" id="search">
+                <div class="search-container">
+                    <div class="search-box">
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search APIs... (e.g., weather, crypto, fun)">
+                    </div>
+                </div>
+
+                <!-- Category Grid -->
+                <div class="category-grid" id="categoryGrid">
+                    <!-- Categories will be loaded dynamically -->
+                </div>
+            </section>
+
+            <!-- APIs Grid -->
+            <section class="apis-section" id="apis">
+                <div class="apis-grid" id="apisGrid">
+                    <!-- APIs will be loaded dynamically -->
+                </div>
+            </section>
+
+            <!-- Loading indicator -->
+            <div class="text-center hidden" id="loadingIndicator">
+                <div class="loading"></div>
+                <p>Loading APIs...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="header" style="border-top: 3px solid var(--terminal-green); border-bottom: none; margin-top: 60px;">
+        <div class="container">
+            <div class="text-center">
+                <p>&copy; 2024 Developer API Explorer - Built with retro vibes 🕹️</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
