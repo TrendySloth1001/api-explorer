@@ -5,6 +5,12 @@ class APIExplorer {
     this.apis = []
     this.categories = []
     this.filteredApis = []
+    this.searchTerm = ""
+    this.activeCategory = "all"
+    this.limit = 24
+    this.offset = 0
+    this.total = 0
+    this.isLoadingMore = false
     this.init()
   }
 
@@ -31,11 +37,20 @@ class APIExplorer {
   async loadAPIs() {
     try {
       this.showLoading(true)
-      const response = await fetch("/api/list")
+      const params = new URLSearchParams()
+      params.set('limit', String(this.limit))
+      params.set('offset', String(this.offset))
+      if (this.activeCategory !== 'all') params.set('category', this.activeCategory)
+      const response = await fetch(`/api/list?${params.toString()}`)
       const data = await response.json()
       if (data.success) {
-        this.apis = data.apis
-        this.filteredApis = [...this.apis]
+        if (this.offset === 0) {
+          this.apis = data.apis
+        } else {
+          this.apis = [...this.apis, ...data.apis]
+        }
+        this.total = data.total ?? this.apis.length
+        this.filteredApis = this.applyFilters()
       }
     } catch (error) {
       console.error("Error loading APIs:", error)
@@ -48,9 +63,10 @@ class APIExplorer {
     // Search functionality
     const searchInput = document.getElementById("searchInput")
     if (searchInput) {
-      searchInput.addEventListener("input", (e) => {
-        this.filterAPIs(e.target.value)
-      })
+      const debounced = this.debounce((value) => {
+        this.filterAPIs(value)
+      }, 250)
+      searchInput.addEventListener("input", (e) => debounced(e.target.value))
     }
 
     // Category filtering
@@ -60,18 +76,33 @@ class APIExplorer {
         this.filterByCategory(category)
       }
     })
+
+    // Infinite scroll
+    window.addEventListener('scroll', () => {
+      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 200
+      if (nearBottom) this.loadMore()
+    })
   }
 
   renderCategories() {
     const categoryGrid = document.getElementById("categoryGrid")
     if (!categoryGrid) return
 
-    const categoryCards = this.categories
+    const cats = ["all", ...this.categories]
+    const icons = {
+      all: "🧩",
+      weather: "⛅",
+      finance: "💹",
+      fun: "🎲",
+      testing: "🧪",
+    }
+    const categoryCards = cats
       .map((category) => {
-        const count = this.apis.filter((api) => api.category === category).length
+        const count = category === 'all' ? this.total || this.apis.length : this.apis.filter((api) => api.category === category).length
+        const icon = icons[(category || '').toLowerCase()] || "🧩"
         return `
-                <div class="category-card fade-in" data-category="${category}">
-                    <h3>${category}</h3>
+                <div class="category-card fade-in ${this.activeCategory === category ? 'active' : ''}" data-category="${category}">
+                    <h3>${icon} ${category}</h3>
                     <p>${count} API${count !== 1 ? "s" : ""}</p>
                 </div>
             `
@@ -99,9 +130,9 @@ class APIExplorer {
       .map(
         (api) => `
             <div class="api-card fade-in" onclick="window.location.href='/api/${api.id}'">
-                <h3>${api.name}</h3>
+                <h3>${this.highlight(api.name)}</h3>
                 <span class="category-tag">${api.category}</span>
-                <p>${api.description}</p>
+                <p>${this.highlight(api.description)}</p>
                 <div class="base-url">${api.base_url}</div>
             </div>
         `,
@@ -112,26 +143,22 @@ class APIExplorer {
   }
 
   filterAPIs(searchTerm) {
-    const term = searchTerm.toLowerCase()
-    this.filteredApis = this.apis.filter(
-      (api) =>
-        api.name.toLowerCase().includes(term) ||
-        api.description.toLowerCase().includes(term) ||
-        api.category.toLowerCase().includes(term),
-    )
+    this.searchTerm = searchTerm
+    this.filteredApis = this.applyFilters()
     this.renderAPIs()
   }
 
   filterByCategory(category) {
-    if (category === "all") {
-      this.filteredApis = [...this.apis]
-    } else {
-      this.filteredApis = this.apis.filter((api) => api.category === category)
-    }
-    this.renderAPIs()
-
-    // Scroll to APIs section
-    document.getElementById("apis").scrollIntoView({ behavior: "smooth" })
+    if (this.activeCategory === category) return
+    this.activeCategory = category
+    this.offset = 0
+    this.apis = []
+    this.filteredApis = []
+    this.loadAPIs().then(() => {
+      this.renderCategories()
+      this.renderAPIs()
+      document.getElementById("apis").scrollIntoView({ behavior: "smooth" })
+    })
   }
 
   showLoading(show) {
@@ -146,6 +173,55 @@ class APIExplorer {
         loadingIndicator.classList.add("hidden")
         apisGrid.style.opacity = "1"
       }
+    }
+  }
+
+  loadMore() {
+    if (this.isLoadingMore) return
+    if (this.apis.length >= this.total) return
+    if (this.searchTerm && this.searchTerm.trim() !== '') return
+    this.isLoadingMore = true
+    this.offset += this.limit
+    this.loadAPIs().finally(() => {
+      this.isLoadingMore = false
+    })
+  }
+
+  applyFilters() {
+    const term = (this.searchTerm || '').toLowerCase()
+    const byCategory = this.activeCategory === 'all' ? this.apis : this.apis.filter(a => a.category === this.activeCategory)
+    if (!term) return [...byCategory]
+    return byCategory.filter(
+      (api) =>
+        api.name.toLowerCase().includes(term) ||
+        api.description.toLowerCase().includes(term) ||
+        api.category.toLowerCase().includes(term),
+    )
+  }
+
+  debounce(fn, delay) {
+    let t
+    return (...args) => {
+      clearTimeout(t)
+      t = setTimeout(() => fn(...args), delay)
+    }
+  }
+
+  escapeHTML(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+  }
+
+  highlight(text) {
+    const term = (this.searchTerm || '').trim()
+    if (!term) return this.escapeHTML(text)
+    try {
+      const re = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig')
+      return this.escapeHTML(text).replace(re, '<mark>$1</mark>')
+    } catch {
+      return this.escapeHTML(text)
     }
   }
 }

@@ -7,7 +7,11 @@
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/api-details.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕹️</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" rel="stylesheet" />
     <script src="/static/api-details.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 </head>
 <body>
     <!-- Header -->
@@ -40,6 +44,7 @@
                     <button class="tab-btn active" data-tab="docs">📖 Documentation</button>
                     <button class="tab-btn" data-tab="sandbox">🧪 Live Sandbox</button>
                     <button class="tab-btn" data-tab="codegen">🤖 AI Code Examples</button>
+                    <button class="tab-btn" data-tab="analyzer">📊 Analyzer</button>
                 </div>
 
                 <!-- Documentation Tab -->
@@ -73,6 +78,19 @@
                                 <input type="text" id="endpointUrl" class="form-control" placeholder="Enter full API endpoint URL">
                             </div>
 
+                            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-group">
+                                    <label>Timeout (seconds): <span id="timeoutLabel">10</span></label>
+                                    <input type="range" id="timeoutSeconds" min="1" max="20" value="10" class="form-control">
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: flex-end;">
+                                    <label style="display:flex; align-items:center; gap:8px;">
+                                        <input type="checkbox" id="allowRedirects" checked>
+                                        Follow redirects
+                                    </label>
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label>Query Parameters (JSON):</label>
                                 <textarea id="queryParams" class="form-control" rows="3" placeholder='{"key": "value"}'></textarea>
@@ -88,7 +106,17 @@
                                 <textarea id="requestBody" class="form-control" rows="4" placeholder='{"data": "value"}'></textarea>
                             </div>
 
-                            <button class="btn btn-primary" id="testApiBtn">🚀 Test API</button>
+                            <div style="display:flex; gap:12px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" id="testApiBtn">🚀 Test API</button>
+                                <button class="btn" id="copyCurlBtn">📋 Copy cURL</button>
+                                <button class="btn" id="copyFetchBtn">📋 Copy Fetch</button>
+                                <button class="btn" id="copyAxiosBtn">📋 Copy Axios</button>
+                                <button class="btn" id="downloadHttpBtn">💾 Download .http</button>
+                                <button class="btn" id="shareLinkBtn">🔗 Share</button>
+                                <button class="btn" id="summarizeBtn">🧠 Summarize Response</button>
+                                <button class="btn" id="downloadResponseBtn">⬇️ Download Response</button>
+                                <button class="btn" id="downloadPostmanBtn">🧰 Export Postman</button>
+                            </div>
                         </div>
 
                         <div class="terminal" id="apiResponse" style="display: none;">
@@ -100,47 +128,105 @@
                                 </div>
                                 <span>API Response</span>
                             </div>
-                            <pre id="responseContent"></pre>
+                            <pre><code id="responseContent" class="language-json"></code></pre>
+                            <div id="responseSummary" style="padding:12px 16px; color: var(--terminal-green);"></div>
+                        </div>
+
+                        <div style="margin-top: 20px;">
+                            <h4>Recent Requests</h4>
+                            <div id="recentRequests" style="display:grid; gap:8px;"></div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Analyzer Tab -->
+                <div class="tab-content" id="analyzer">
+                    <div class="docs-content">
+                        <h3>Response Analyzer</h3>
+                        <p>Track response times, sizes, and status codes from your recent tests.</p>
+                        <div style="margin: 10px 0 16px 0;">
+                            <button class="btn" id="analyzeTestBtn">🧪 Run Test</button>
+                        </div>
+                        <div class="summary-grid">
+                            <div class="summary-card"><div class="badge">Avg Time</div><div id="statAvgTime">—</div></div>
+                            <div class="summary-card"><div class="badge">P95 Time</div><div id="statP95Time">—</div></div>
+                            <div class="summary-card"><div class="badge">Avg Size</div><div id="statAvgSize">—</div></div>
+                            <div class="summary-card"><div class="badge">Requests</div><div id="statRequests">0</div></div>
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr; gap: 24px; margin-top: 20px;">
+                            <div class="terminal"><div class="terminal-header"><div class="terminal-dots"><div class="terminal-dot red"></div><div class="terminal-dot yellow"></div><div class="terminal-dot green"></div></div><span>Response Time (ms)</span></div><canvas id="chartTime" height="120"></canvas></div>
+                            <div class="terminal"><div class="terminal-header"><div class="terminal-dots"><div class="terminal-dot red"></div><div class="terminal-dot yellow"></div><div class="terminal-dot green"></div></div><span>Payload Size (bytes)</span></div><canvas id="chartSize" height="120"></canvas></div>
+                            <div class="terminal"><div class="terminal-header"><div class="terminal-dots"><div class="terminal-dot red"></div><div class="terminal-dot yellow"></div><div class="terminal-dot green"></div></div><span>Status Codes</span></div><canvas id="chartStatus" height="120"></canvas></div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Code Generation Tab -->
                 <div class="tab-content" id="codegen">
                     <div class="codegen-content">
                         <h3>AI-Generated Code Examples</h3>
-                        <p>Generate Python and JavaScript code examples for this API using AI.</p>
-                        
-                        <button class="btn btn-secondary" id="generateCodeBtn">🤖 Generate Code Examples</button>
-                        
-                        <div class="code-examples" id="codeExamples" style="display: none;">
-                            <div class="code-section">
-                                <h4>Python Example</h4>
-                                <div class="terminal">
-                                    <div class="terminal-header">
-                                        <div class="terminal-dots">
-                                            <div class="terminal-dot red"></div>
-                                            <div class="terminal-dot yellow"></div>
-                                            <div class="terminal-dot green"></div>
-                                        </div>
-                                        <span>python_example.py</span>
-                                    </div>
-                                    <pre id="pythonCode"></pre>
-                                </div>
-                            </div>
+                        <p>Generate code examples for this API using AI. Switch between tabs like a real editor.</p>
 
-                            <div class="code-section">
-                                <h4>JavaScript Example</h4>
-                                <div class="terminal">
-                                    <div class="terminal-header">
-                                        <div class="terminal-dots">
-                                            <div class="terminal-dot red"></div>
-                                            <div class="terminal-dot yellow"></div>
-                                            <div class="terminal-dot green"></div>
+                        <button class="btn btn-secondary" id="generateCodeBtn">🤖 Generate Code Examples</button>
+
+                        <div class="code-examples" id="codeExamples" style="display: none;">
+                            <div class="vscode-tabs">
+                                <button class="vscode-tab active" data-code-tab="python">python_example.py</button>
+                                <button class="vscode-tab" data-code-tab="javascript">javascript_example.js</button>
+                                <button class="vscode-tab" data-code-tab="curl">curl.sh</button>
+                                <button class="vscode-tab" data-code-tab="axios">axios_example.js</button>
+                            </div>
+                            <div class="vscode-panels">
+                                <div class="vscode-panel active" data-code-panel="python">
+                                    <div class="terminal">
+                                        <div class="terminal-header">
+                                            <div class="terminal-dots">
+                                                <div class="terminal-dot red"></div>
+                                                <div class="terminal-dot yellow"></div>
+                                                <div class="terminal-dot green"></div>
+                                            </div>
+                                            <span>python_example.py</span>
                                         </div>
-                                        <span>javascript_example.js</span>
+                                        <pre><code id="pythonCode" class="language-python"></code></pre>
                                     </div>
-                                    <pre id="javascriptCode"></pre>
+                                </div>
+                                <div class="vscode-panel" data-code-panel="javascript">
+                                    <div class="terminal">
+                                        <div class="terminal-header">
+                                            <div class="terminal-dots">
+                                                <div class="terminal-dot red"></div>
+                                                <div class="terminal-dot yellow"></div>
+                                                <div class="terminal-dot green"></div>
+                                            </div>
+                                            <span>javascript_example.js</span>
+                                        </div>
+                                        <pre><code id="javascriptCode" class="language-javascript"></code></pre>
+                                    </div>
+                                </div>
+                                <div class="vscode-panel" data-code-panel="curl">
+                                    <div class="terminal">
+                                        <div class="terminal-header">
+                                            <div class="terminal-dots">
+                                                <div class="terminal-dot red"></div>
+                                                <div class="terminal-dot yellow"></div>
+                                                <div class="terminal-dot green"></div>
+                                            </div>
+                                            <span>curl.sh</span>
+                                        </div>
+                                        <pre><code id="curlCode" class="language-bash"></code></pre>
+                                    </div>
+                                </div>
+                                <div class="vscode-panel" data-code-panel="axios">
+                                    <div class="terminal">
+                                        <div class="terminal-header">
+                                            <div class="terminal-dots">
+                                                <div class="terminal-dot red"></div>
+                                                <div class="terminal-dot yellow"></div>
+                                                <div class="terminal-dot green"></div>
+                                            </div>
+                                            <span>axios_example.js</span>
+                                        </div>
+                                        <pre><code id="axiosCode" class="language-javascript"></code></pre>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -150,6 +236,6 @@
         </div>
     </main>
 
-    <script src="/static/api-details.js"></script>
+    
 </body>
 </html>

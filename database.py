@@ -75,6 +75,18 @@ def init_database():
             INSERT INTO apis (name, category, base_url, description, sample_endpoint, auth_type)
             VALUES (?, ?, ?, ?, ?, ?)
         ''', sample_apis)
+        
+        # Optionally seed additional APIs from SQL script if present
+        additional_sql_path = os.path.join(os.path.dirname(__file__), 'scripts', 'additional_apis.sql')
+        try:
+            if os.path.exists(additional_sql_path):
+                with open(additional_sql_path, 'r', encoding='utf-8') as f:
+                    sql_script = f.read().strip()
+                    if sql_script:
+                        cursor.executescript(sql_script)
+                        print("Loaded additional APIs from scripts/additional_apis.sql")
+        except Exception as e:
+            print(f"Warning: failed to load additional APIs: {e}")
     
     conn.commit()
     conn.close()
